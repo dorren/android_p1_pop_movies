@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.view.ViewGroup;
 
@@ -14,7 +15,7 @@ import com.squareup.picasso.Picasso;
  */
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapterViewHolder> {
-    private String[] mPosterURLs;
+    private MoviePoster[] mPosters;
 
     @Override
     public MovieAdapterViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
@@ -32,31 +33,37 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapter
     public void onBindViewHolder(MovieAdapterViewHolder holder, int position) {
         ImageView posterView = holder.mMoviePosterView;
         Context context = posterView.getContext();
-        String url = mPosterURLs[position];
+        String url = mPosters[position].imagePath;
         Picasso.with(context).load(url).into(posterView);
 
     }
 
     @Override
     public int getItemCount() {
-        if(mPosterURLs == null) {
+        if(mPosters == null) {
             return 0;
         }else {
-            return mPosterURLs.length;
+            return mPosters.length;
         }
     }
 
-    public void setPosterData(String[] urls) {
-        mPosterURLs = urls;
+    public void setPosterData(MoviePoster[] posters) {
+        mPosters = posters;
         notifyDataSetChanged();
     }
 
-    public class MovieAdapterViewHolder extends RecyclerView.ViewHolder{
+    public class MovieAdapterViewHolder extends RecyclerView.ViewHolder implements OnClickListener {
         public final ImageView mMoviePosterView;
 
         public MovieAdapterViewHolder(View view) {
             super(view);
             mMoviePosterView = (ImageView) view.findViewById(R.id.movie_poster);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int n = getAdapterPosition();
+
         }
     }
 }

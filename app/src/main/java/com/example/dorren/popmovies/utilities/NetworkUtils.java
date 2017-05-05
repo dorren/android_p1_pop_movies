@@ -116,4 +116,27 @@ public final class NetworkUtils {
         }
         return null;
     }
+
+    /**
+     * sample output url
+     *     https://api.themoviedb.org/3/movie/278?api_key=abc123
+     *
+     * @param movieId
+     * @return movie detail URL
+     */
+    public static URL buildDetailURL(String movieId) {
+        Uri uri = Uri.parse(MOVIE_DB_BASE_URL).buildUpon()
+                .appendPath("movie")
+                .appendPath(movieId)
+                .appendQueryParameter(API_KEY_NAME, KEY)
+                .build();
+
+        try {
+            URL url = new URL(uri.toString());
+            return url;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

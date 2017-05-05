@@ -42,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
         new FetchMoviesTask(this).execute(NetworkUtils.SORT_POPULAR);
     }
 
-    public class FetchMoviesTask extends AsyncTask<String, Void, String[]> {
-        private String[] mPosterURLs;
+    public class FetchMoviesTask extends AsyncTask<String, Void, MoviePoster[]> {
+        private MoviePoster[] mPosters;
         private Context mContext;
 
         public FetchMoviesTask(Context context){
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected String[] doInBackground(String... params) {
+        protected MoviePoster[] doInBackground(String... params) {
 
             URL url = NetworkUtils.buildMovieURL(params[0]);
             Log.i(KLASS, url.toString());
@@ -74,19 +74,26 @@ public class MainActivity extends AppCompatActivity {
                 String response = NetworkUtils.getResponseFromHttpUrl(url);
                 JSONObject json = new JSONObject(response);
                 JSONArray movies = json.getJSONArray("results");
-                mPosterURLs = new String[movies.length()];
+                mPosters = new MoviePoster[movies.length()];
 
                 for (int i = 0; i < movies.length(); i++) {
+                    MoviePoster poster = new MoviePoster();
+
+
                     JSONObject movie = movies.getJSONObject(i);
-                    String title = movie.getString("title");
+                    poster.originalTitle = movie.getString("original_title");
 
                     String imagePath = movie.getString("poster_path");
                     URL fullPath = NetworkUtils.buildImageURL(imagePath);
-                    mPosterURLs[i] = fullPath.toString();
+                    poster.imagePath = fullPath.toString();
 
+                    URL detailPath = NetworkUtils.buildDetailURL(movie.getString("id"));
+                    poster.detailPath= detailPath.toString();
+
+                    mPosters[i] = poster;
                 }
 
-                return mPosterURLs;
+                return mPosters;
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -95,9 +102,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(String[] strings) {
-            Log.i(KLASS, strings.length + " movies poster found");
-            mMovieAdapter.setPosterData(strings);
+        protected void onPostExecute(MoviePoster[] posters) {
+            mMovieAdapter.setPosterData(posters);
         }
     }
 }
