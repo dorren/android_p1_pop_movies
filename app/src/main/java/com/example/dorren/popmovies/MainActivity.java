@@ -1,6 +1,7 @@
 package com.example.dorren.popmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,7 +17,7 @@ import org.json.JSONObject;
 
 import java.net.URL;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
     private static final String KLASS = MainActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
     private MovieAdapter mMovieAdapter;
@@ -36,10 +37,20 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
-        mMovieAdapter = new MovieAdapter();
+        mMovieAdapter = new MovieAdapter(this);
         mRecyclerView.setAdapter(mMovieAdapter);
 
         new FetchMoviesTask(this).execute(NetworkUtils.SORT_POPULAR);
+    }
+
+    @Override
+    public void onClick(MoviePoster poster) {
+        Context context = this;
+        Log.i(KLASS, "clicked\n " + poster.toString());
+//        Class destinationClass = DetailActivity.class;
+//        Intent intentToStartDetailActivity = new Intent(context, destinationClass);
+//        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, weatherForDay);
+//        startActivity(intentToStartDetailActivity);
     }
 
     public class FetchMoviesTask extends AsyncTask<String, Void, MoviePoster[]> {
@@ -79,15 +90,15 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < movies.length(); i++) {
                     MoviePoster poster = new MoviePoster();
 
-
                     JSONObject movie = movies.getJSONObject(i);
+                    poster.movieId = movie.getString("id");
                     poster.originalTitle = movie.getString("original_title");
 
                     String imagePath = movie.getString("poster_path");
                     URL fullPath = NetworkUtils.buildImageURL(imagePath);
                     poster.imagePath = fullPath.toString();
 
-                    URL detailPath = NetworkUtils.buildDetailURL(movie.getString("id"));
+                    URL detailPath = NetworkUtils.buildDetailURL(poster.movieId);
                     poster.detailPath= detailPath.toString();
 
                     mPosters[i] = poster;

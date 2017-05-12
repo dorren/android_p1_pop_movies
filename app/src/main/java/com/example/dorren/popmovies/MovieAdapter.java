@@ -2,6 +2,7 @@ package com.example.dorren.popmovies;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -15,7 +16,17 @@ import com.squareup.picasso.Picasso;
  */
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapterViewHolder> {
+    private static final String KLASS = MovieAdapter.class.getSimpleName();
     private MoviePoster[] mPosters;
+    private final MovieAdapterOnClickHandler mClickHandler;
+
+    public interface MovieAdapterOnClickHandler {
+        void onClick(MoviePoster poster);
+    }
+
+    public MovieAdapter(MovieAdapterOnClickHandler clickHandler){
+        mClickHandler = clickHandler;
+    }
 
     @Override
     public MovieAdapterViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
@@ -58,11 +69,14 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapter
         public MovieAdapterViewHolder(View view) {
             super(view);
             mMoviePosterView = (ImageView) view.findViewById(R.id.movie_poster);
+            view.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
             int n = getAdapterPosition();
+            MoviePoster poster = mPosters[n];
+            mClickHandler.onClick(poster);
 
         }
     }
