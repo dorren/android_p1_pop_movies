@@ -46,11 +46,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     @Override
     public void onClick(MoviePoster poster) {
         Context context = this;
-        Log.i(KLASS, "clicked\n " + poster.toString());
-//        Class destinationClass = DetailActivity.class;
-//        Intent intentToStartDetailActivity = new Intent(context, destinationClass);
-//        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, weatherForDay);
-//        startActivity(intentToStartDetailActivity);
+        Class destinationClass = MovieDetailActivity.class;
+        Intent intentToStartDetailActivity = new Intent(context, destinationClass);
+
+        String url = poster.detailPath;
+        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, url);
+        startActivity(intentToStartDetailActivity);
     }
 
     public class FetchMoviesTask extends AsyncTask<String, Void, MoviePoster[]> {
