@@ -8,6 +8,7 @@ package com.example.dorren.popmovies;
 public class MoviePoster{
     public String movieId;
     public String originalTitle, imagePath, detailPath, releaseDate, rating;
+    public String overview;
 
 
     @Override
@@ -15,7 +16,10 @@ public class MoviePoster{
         String result = movieId       + "\n " +
                         originalTitle + "\n " +
                         imagePath     + "\n " +
-                        detailPath;
+                        detailPath    + "\n " +
+                        overview      + "\n " +
+                        releaseDate   + "\n " +
+                        rating;
 
         return result;
     }

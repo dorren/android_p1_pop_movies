@@ -7,9 +7,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.dorren.popmovies.utilities.NetworkUtils;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -37,10 +39,6 @@ public class MovieDetailActivity extends AppCompatActivity {
             if (activityIntent.hasExtra(Intent.EXTRA_TEXT)) {
                 String movieId = activityIntent.getStringExtra(Intent.EXTRA_TEXT);
 
-                mDetailText = (TextView) findViewById(R.id.movie_detail);
-                mDetailText.setText(movieId);
-
-
                 new FetchDetailTask(this).execute(movieId);
             }
 
@@ -49,6 +47,22 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     public void renderPoster(MoviePoster poster){
         Log.i(KLASS, "render poster " + poster.toString());
+
+        TextView titleView = (TextView) findViewById(R.id.movie_title);
+        titleView.setText(poster.originalTitle);
+
+        ImageView thumbView = (ImageView) findViewById(R.id.movie_thumb);
+        String url = poster.imagePath;
+        Picasso.with(this).load(url).into(thumbView);
+
+        TextView overviewView = (TextView) findViewById(R.id.movie_overview);
+        overviewView.setText(poster.overview);
+
+        TextView ratingView = (TextView) findViewById(R.id.movie_rating);
+        ratingView.setText("Rating: " + poster.rating);
+
+        TextView dateView = (TextView) findViewById(R.id.movie_release_date);
+        dateView.setText("Release Date: " + poster.releaseDate);
     }
 
     public class FetchDetailTask extends AsyncTask<String, Void, MoviePoster> {
@@ -72,6 +86,8 @@ public class MovieDetailActivity extends AppCompatActivity {
 
                 mPoster.movieId = movie.getString("id");
                 mPoster.originalTitle = movie.getString("original_title");
+
+                mPoster.overview = movie.getString("overview");
 
                 String imagePath = movie.getString("poster_path");
                 URL fullPath = NetworkUtils.buildImageURL(imagePath);
