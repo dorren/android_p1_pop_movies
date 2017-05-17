@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         Intent intentToDetail = new Intent(context, destinationClass);
 
         String url = poster.detailPath;
-        intentToDetail.putExtra(Intent.EXTRA_TEXT, url);
+        intentToDetail.putExtra(Intent.EXTRA_TEXT, poster.movieId);
         startActivity(intentToDetail);
     }
 
