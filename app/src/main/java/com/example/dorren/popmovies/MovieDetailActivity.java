@@ -1,5 +1,6 @@
 package com.example.dorren.popmovies;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -18,11 +19,14 @@ public class MovieDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.movie_detail);
 
-        Intent intentThatStartedThisActivity = getIntent();
+        Intent activityIntent = getIntent();
+        Context context = getApplicationContext();
 
-        if (intentThatStartedThisActivity != null) {
-            if (intentThatStartedThisActivity.hasExtra(Intent.EXTRA_TEXT)) {
-                String url = intentThatStartedThisActivity.getStringExtra(Intent.EXTRA_TEXT);
+
+        if (activityIntent != null) {
+            if (activityIntent.hasExtra(Intent.EXTRA_TEXT)) {
+                String url = activityIntent.getStringExtra(Intent.EXTRA_TEXT);
+
                 mDetailText = (TextView) findViewById(R.id.movie_detail);
                 mDetailText.setText(url);
             }
