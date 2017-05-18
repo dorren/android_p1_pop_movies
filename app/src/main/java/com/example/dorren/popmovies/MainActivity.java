@@ -9,6 +9,9 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.example.dorren.popmovies.utilities.NetworkUtils;
 
@@ -21,12 +24,15 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private static final String KLASS = MainActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
     private MovieAdapter mMovieAdapter;
+    private TextView mErrorText;
+    private ProgressBar mSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mSpinner = (ProgressBar) findViewById(R.id.main_loading_indicator);
         mRecyclerView = (RecyclerView) findViewById(R.id.movie_posters);
 
         //LinearLayoutManager layoutManager
@@ -54,11 +60,18 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         startActivity(intentToDetail);
     }
 
+    public void renderError(String msg) {
+        mErrorText = (TextView) findViewById(R.id.main_error_message);
+        mErrorText.setVisibility(View.VISIBLE);
+        mErrorText.setText(mErrorText.getText() + "\n\n" + msg);
+    }
+
     public class FetchMoviesTask extends AsyncTask<String, Void, MoviePoster[]> {
         private MoviePoster[] mPosters;
-        private Context mContext;
+        private MainActivity mContext;
+        private String mErrorMsg;
 
-        public FetchMoviesTask(Context context){
+        public FetchMoviesTask(MainActivity context){
             super();
             mContext = context;
         }
@@ -73,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         @Override
         protected void onPreExecute() {
+            mSpinner.setVisibility(View.VISIBLE);
             setApiKey();
         }
 
@@ -85,37 +99,52 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             try {
                 String response = NetworkUtils.getResponseFromHttpUrl(url);
                 JSONObject json = new JSONObject(response);
-                JSONArray movies = json.getJSONArray("results");
-                mPosters = new MoviePoster[movies.length()];
 
-                for (int i = 0; i < movies.length(); i++) {
-                    MoviePoster poster = new MoviePoster();
-
-                    JSONObject movie = movies.getJSONObject(i);
-                    poster.movieId = movie.getString("id");
-                    poster.originalTitle = movie.getString("original_title");
-
-                    String imagePath = movie.getString("poster_path");
-                    URL fullPath = NetworkUtils.buildImageURL(imagePath);
-                    poster.imagePath = fullPath.toString();
-
-                    URL detailPath = NetworkUtils.buildDetailURL(poster.movieId);
-                    poster.detailPath= detailPath.toString();
-
-                    mPosters[i] = poster;
+                if(json.has("status_message")) {
+                    mErrorMsg = json.getString("status_message");
                 }
 
-                return mPosters;
+                if(mErrorMsg == null) {
+                    JSONArray movies = json.getJSONArray("results");
+                    mPosters = new MoviePoster[movies.length()];
 
+                    for (int i = 0; i < movies.length(); i++) {
+                        MoviePoster poster = new MoviePoster();
+
+                        JSONObject movie = movies.getJSONObject(i);
+                        poster.movieId = movie.getString("id");
+                        poster.originalTitle = movie.getString("original_title");
+
+                        String imagePath = movie.getString("poster_path");
+                        URL fullPath = NetworkUtils.buildImageURL(imagePath);
+                        poster.imagePath = fullPath.toString();
+
+                        URL detailPath = NetworkUtils.buildDetailURL(poster.movieId);
+                        poster.detailPath = detailPath.toString();
+
+                        mPosters[i] = poster;
+                    }
+
+                    return mPosters;
+                }else {
+                    return null;
+                }
             } catch (Exception e) {
                 e.printStackTrace();
+                mErrorMsg = e.getMessage();
                 return null;
             }
         }
 
         @Override
         protected void onPostExecute(MoviePoster[] posters) {
-            mMovieAdapter.setPosterData(posters);
+            mSpinner.setVisibility(View.INVISIBLE);
+
+            if(mErrorMsg != null && !mErrorMsg.isEmpty()) {
+                mContext.renderError(mErrorMsg);
+            } else {
+                mMovieAdapter.setPosterData(posters);
+            }
         }
     }
 }

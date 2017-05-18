@@ -3,6 +3,9 @@
 <resources>
 <!--
     <string name="app_name">Pop Movies</string>
+    <string name="error_message">
+        An error has occurred. Please try again by clicking REFRESH
+    </string>
     <string name="themoviedb_api_key">abc123</string>
 -->
 </resources>

@@ -7,7 +7,9 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.dorren.popmovies.utilities.NetworkUtils;
@@ -24,16 +26,16 @@ import java.net.URL;
 
 public class MovieDetailActivity extends AppCompatActivity {
     private static final String KLASS = MainActivity.class.getSimpleName();
-    private TextView mDetailText;
+    private ProgressBar mSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.movie_detail);
 
-        Intent activityIntent = getIntent();
-        Context context = getApplicationContext();
+        mSpinner = (ProgressBar) findViewById(R.id.detail_loading_indicator);
 
+        Intent activityIntent = getIntent();
 
         if (activityIntent != null) {
             if (activityIntent.hasExtra(Intent.EXTRA_TEXT)) {
@@ -75,6 +77,11 @@ public class MovieDetailActivity extends AppCompatActivity {
         }
 
         @Override
+        protected void onPreExecute() {
+            mSpinner.setVisibility(View.VISIBLE);
+        }
+
+        @Override
         protected MoviePoster doInBackground(String... params) {
             String movieId = params[0];
             URL detailPath = NetworkUtils.buildDetailURL(movieId);
@@ -108,6 +115,7 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(MoviePoster moviePoster) {
+            mSpinner.setVisibility(View.INVISIBLE);
             mContext.renderPoster(moviePoster);
         }
     }
