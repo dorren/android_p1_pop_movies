@@ -9,6 +9,9 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -50,12 +53,34 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+
+        if(itemId == R.id.action_popular){
+            new FetchMoviesTask(this).execute(NetworkUtils.SORT_POPULAR);
+        }
+
+        if(itemId == R.id.action_top_rated){
+            new FetchMoviesTask(this).execute(NetworkUtils.SORT_TOP_RATED);
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public void onClick(MoviePoster poster) {
         Context context = this;
         Class destinationClass = MovieDetailActivity.class;
         Intent intentToDetail = new Intent(context, destinationClass);
 
-        String url = poster.detailPath;
         intentToDetail.putExtra(Intent.EXTRA_TEXT, poster.movieId);
         startActivity(intentToDetail);
     }
