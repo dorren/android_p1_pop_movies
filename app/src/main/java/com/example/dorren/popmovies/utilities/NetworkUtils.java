@@ -20,7 +20,7 @@ public final class NetworkUtils {
     private static final String TAG = NetworkUtils.class.getSimpleName();
 
     public static final String MOVIE_DB_BASE_URL = "https://api.themoviedb.org/3";
-    public static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w185";
+    public static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
     public static final String POPULAR_PATH   = "movie/popular";
     public static final String TOP_RATED_PATH = "movie/top_rated";
 

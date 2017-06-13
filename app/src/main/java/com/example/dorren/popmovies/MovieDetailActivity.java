@@ -99,10 +99,13 @@ public class MovieDetailActivity extends AppCompatActivity
         overviewView.setText(poster.overview);
 
         TextView ratingView = (TextView) findViewById(R.id.movie_rating);
-        ratingView.setText("Rating: " + poster.rating);
+        ratingView.setText(poster.rating + "/10");
 
         TextView dateView = (TextView) findViewById(R.id.movie_release_date);
-        dateView.setText("Release Date: " + poster.releaseDate);
+        dateView.setText(poster.releaseDate.substring(0, 4));
+
+        TextView runtimeView = (TextView) findViewById(R.id.movie_runtime);
+        runtimeView.setText(Integer.toString(poster.runtime) + " min");
     }
 
 
@@ -143,6 +146,7 @@ public class MovieDetailActivity extends AppCompatActivity
 
                 mPoster.releaseDate = movie.getString("release_date");
                 mPoster.rating = movie.getString("vote_average");
+                mPoster.runtime = movie.getInt("runtime");
 
                 return mPoster;
 

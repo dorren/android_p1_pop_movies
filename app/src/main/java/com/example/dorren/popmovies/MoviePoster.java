@@ -9,6 +9,7 @@ public class MoviePoster{
     public String movieId;
     public String originalTitle, imagePath, detailPath, releaseDate, rating;
     public String overview;
+    public int runtime;
 
 
     @Override
@@ -19,7 +20,8 @@ public class MoviePoster{
                         detailPath    + "\n " +
                         overview      + "\n " +
                         releaseDate   + "\n " +
-                        rating;
+                        rating        + "\n " +
+                        runtime;
 
         return result;
     }
