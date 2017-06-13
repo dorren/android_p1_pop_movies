@@ -2,10 +2,13 @@ package com.example.dorren.popmovies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -24,8 +27,12 @@ import java.net.URL;
  * Created by dorrenchen on 5/12/17.
  */
 
-public class MovieDetailActivity extends AppCompatActivity {
+public class MovieDetailActivity extends AppCompatActivity
+    implements TrailerAdapter.TrailerOnClickHandler{
+
     private static final String KLASS = MainActivity.class.getSimpleName();
+    private RecyclerView mTrailersView;
+    private TrailerAdapter mTrailersAdapter;
     private ProgressBar mSpinner;
 
     @Override
@@ -35,6 +42,16 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         mSpinner = (ProgressBar) findViewById(R.id.detail_loading_indicator);
 
+        // setup trailers
+        mTrailersView = (RecyclerView) findViewById(R.id.movie_trailers);
+
+        LinearLayoutManager layoutManager
+                = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mTrailersView.setLayoutManager(layoutManager);
+        mTrailersView.setHasFixedSize(true);
+        mTrailersAdapter = new TrailerAdapter(this);
+        mTrailersView.setAdapter(mTrailersAdapter);
+
         Intent activityIntent = getIntent();
 
         if (activityIntent != null) {
@@ -42,9 +59,19 @@ public class MovieDetailActivity extends AppCompatActivity {
                 String movieId = activityIntent.getStringExtra(Intent.EXTRA_TEXT);
 
                 new FetchDetailTask(this).execute(movieId);
+                new FetchTrailersTask(this).execute(movieId);
             }
 
         }
+    }
+
+    @Override
+    public void onClick(MovieTrailer trailer) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        Uri uri = Uri.parse(trailer.videoURL().toString());
+        Log.d("trailer click ", trailer.videoURL().toString());
+        intent.setData(uri);
+        startActivity(intent);
     }
 
     public void renderPoster(MoviePoster poster){
@@ -66,6 +93,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         TextView dateView = (TextView) findViewById(R.id.movie_release_date);
         dateView.setText("Release Date: " + poster.releaseDate);
     }
+
 
     public class FetchDetailTask extends AsyncTask<String, Void, MoviePoster> {
         private MovieDetailActivity mContext;
@@ -117,6 +145,62 @@ public class MovieDetailActivity extends AppCompatActivity {
         protected void onPostExecute(MoviePoster moviePoster) {
             mSpinner.setVisibility(View.INVISIBLE);
             mContext.renderPoster(moviePoster);
+        }
+    }
+
+    public class FetchTrailersTask extends AsyncTask<String, Void, MovieTrailer[]> {
+        private MovieDetailActivity mContext;
+        private MovieTrailer[] mTrailers;
+        private String mErrorMsg;
+
+        public FetchTrailersTask(MovieDetailActivity context){
+            super();
+            mContext = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            mSpinner.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected MovieTrailer[] doInBackground(String... params) {
+            String movieId = params[0];
+            URL trailersPath = NetworkUtils.buildTrailersURL(movieId);
+
+            try {
+                String response = NetworkUtils.getResponseFromHttpUrl(trailersPath);
+                JSONObject json = new JSONObject(response);
+                JSONArray jsonTrailers = json.getJSONArray("results");
+                mTrailers = new MovieTrailer[jsonTrailers.length()];
+
+                for(int i=0; i<jsonTrailers.length(); i++){
+                    JSONObject trailer = jsonTrailers.getJSONObject(i);
+                    mTrailers[i] = new MovieTrailer();
+                    mTrailers[i].key  = trailer.getString("key");
+                    mTrailers[i].name = trailer.getString("name");
+                    mTrailers[i].site = trailer.getString("site");
+                    mTrailers[i].type = trailer.getString("type");
+                    mTrailers[i].size = trailer.getInt("size");
+
+                    Log.d("detail ", mTrailers[i].toString());
+                }
+                return mTrailers;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                mErrorMsg = e.getMessage();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(MovieTrailer[] movieTrailers) {
+            if(mErrorMsg != null && !mErrorMsg.isEmpty()) {
+
+            } else {
+                mTrailersAdapter.setData(movieTrailers);
+            }
         }
     }
 }

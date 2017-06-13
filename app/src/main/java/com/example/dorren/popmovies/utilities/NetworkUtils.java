@@ -30,6 +30,8 @@ public final class NetworkUtils {
     public static final String SORT_POPULAR   = "popular";
     public static final String SORT_TOP_RATED = "top_rated";
 
+    public static final String YOUTUBE_URL = "https://www.youtube.com";
+
 
     /**
      * build API url
@@ -129,6 +131,56 @@ public final class NetworkUtils {
                 .appendPath("movie")
                 .appendPath(movieId)
                 .appendQueryParameter(API_KEY_NAME, KEY)
+                .build();
+
+        try {
+            URL url = new URL(uri.toString());
+            return url;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * get trailers metadata for given movie.
+     *
+     * sample output url
+     *     https://api.themoviedb.org/3/movie/278/videos?api_key=abc123
+     *
+     * @param movieId
+     * @return movie trailers URL
+     */
+    public static URL buildTrailersURL(String movieId) {
+        Uri uri = Uri.parse(MOVIE_DB_BASE_URL).buildUpon()
+                .appendPath("movie")
+                .appendPath(movieId)
+                .appendPath("videos")
+                .appendQueryParameter(API_KEY_NAME, KEY)
+                .build();
+
+        try {
+            URL url = new URL(uri.toString());
+            return url;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * return youtube trailer url
+     *
+     * sample output url
+     *     https://api.themoviedb.org/3/movie/278/videos?api_key=abc123
+     *
+     * @param key, youtube video key parameter
+     * @return movie trailers URL
+     */
+    public static URL buildYoutubeURL(String key) {
+        Uri uri = Uri.parse(YOUTUBE_URL).buildUpon()
+                .appendPath("watch")
+                .appendQueryParameter("v", key)
                 .build();
 
         try {
