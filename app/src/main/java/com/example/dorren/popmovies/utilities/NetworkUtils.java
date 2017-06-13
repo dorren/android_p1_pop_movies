@@ -191,4 +191,30 @@ public final class NetworkUtils {
         }
         return null;
     }
+
+    /**
+     * get reviews  for given movie.
+     *
+     * sample output url
+     *     https://api.themoviedb.org/3/movie/278/reviews?api_key=abc123
+     *
+     * @param movieId
+     * @return movie reviews URL
+     */
+    public static URL buildReviewsURL(String movieId) {
+        Uri uri = Uri.parse(MOVIE_DB_BASE_URL).buildUpon()
+                .appendPath("movie")
+                .appendPath(movieId)
+                .appendPath("reviews")
+                .appendQueryParameter(API_KEY_NAME, KEY)
+                .build();
+
+        try {
+            URL url = new URL(uri.toString());
+            return url;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

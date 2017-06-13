@@ -33,6 +33,8 @@ public class MovieDetailActivity extends AppCompatActivity
     private static final String KLASS = MainActivity.class.getSimpleName();
     private RecyclerView mTrailersView;
     private TrailerAdapter mTrailersAdapter;
+    private RecyclerView mReviewsView;
+    private ReviewAdapter mReviewsAdapter;
     private ProgressBar mSpinner;
 
     @Override
@@ -52,6 +54,15 @@ public class MovieDetailActivity extends AppCompatActivity
         mTrailersAdapter = new TrailerAdapter(this);
         mTrailersView.setAdapter(mTrailersAdapter);
 
+        mReviewsView = (RecyclerView) findViewById(R.id.movie_reviews);
+
+        LinearLayoutManager layoutManager2
+                = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mReviewsView.setLayoutManager(layoutManager2);
+        mReviewsView.setHasFixedSize(true);
+        mReviewsAdapter = new ReviewAdapter();
+        mReviewsView.setAdapter(mReviewsAdapter);
+
         Intent activityIntent = getIntent();
 
         if (activityIntent != null) {
@@ -60,8 +71,8 @@ public class MovieDetailActivity extends AppCompatActivity
 
                 new FetchDetailTask(this).execute(movieId);
                 new FetchTrailersTask(this).execute(movieId);
+                new FetchReviewsTask(this).execute(movieId);
             }
-
         }
     }
 
@@ -200,6 +211,59 @@ public class MovieDetailActivity extends AppCompatActivity
 
             } else {
                 mTrailersAdapter.setData(movieTrailers);
+            }
+        }
+    }
+
+    public class FetchReviewsTask extends AsyncTask<String, Void, MovieReview[]> {
+        private MovieDetailActivity mContext;
+        private MovieReview[] mReviews;
+        private String mErrorMsg;
+
+        public FetchReviewsTask(MovieDetailActivity context){
+            super();
+            mContext = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            mSpinner.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected MovieReview[] doInBackground(String... params) {
+            String movieId = params[0];
+            URL reviewsPath = NetworkUtils.buildReviewsURL(movieId);
+
+            try {
+                String response = NetworkUtils.getResponseFromHttpUrl(reviewsPath);
+                JSONObject json = new JSONObject(response);
+                JSONArray jsonArray = json.getJSONArray("results");
+                mReviews = new MovieReview[jsonArray.length()];
+
+                for(int i=0; i<jsonArray.length(); i++){
+                    JSONObject item = jsonArray.getJSONObject(i);
+                    mReviews[i] = new MovieReview();
+                    mReviews[i].author  = item.getString("author");
+                    mReviews[i].content = item.getString("content");
+
+                    Log.d("detail ", mReviews[i].toString());
+                }
+                return mReviews;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                mErrorMsg = e.getMessage();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(MovieReview[] movieReviews) {
+            if(mErrorMsg != null && !mErrorMsg.isEmpty()) {
+
+            } else {
+                mReviewsAdapter.setData(movieReviews);
             }
         }
     }

@@ -3,9 +3,14 @@
 <resources>
 <!--
     <string name="app_name">Pop Movies</string>
+    <string name="themoviedb_api_key">abc123</string>
+
     <string name="error_message">
         An error has occurred. Please try again by clicking REFRESH
     </string>
-    <string name="themoviedb_api_key">abc123</string>
+
+    <string name="trailers_heading">Trailers</string>
+    <string name="play_trailer">Play trailer</string>
+    <string name="reviews_heading">Reviews</string>
 -->
 </resources>
