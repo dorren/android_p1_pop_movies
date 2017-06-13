@@ -6,4 +6,5 @@
     <color name="colorTeal">#009688</color>
     <color name="colorTealLight">#86E4DB</color>
     <color name="lightGray">#CCCCCC</color>
+    <color name="darkGray">#777777</color>
 </resources>

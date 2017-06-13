@@ -12,5 +12,7 @@
     <string name="trailers_heading">Trailers</string>
     <string name="play_trailer">Play trailer</string>
     <string name="reviews_heading">Reviews</string>
+    <string name="mark_fav">MARK AS FAVORITE</string>
+    <string name="fav_key">com.example.dorren.popmovies.fav</string>
 -->
 </resources>

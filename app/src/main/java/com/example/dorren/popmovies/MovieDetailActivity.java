@@ -2,15 +2,18 @@ package com.example.dorren.popmovies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -22,6 +25,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.URL;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by dorrenchen on 5/12/17.
@@ -30,11 +35,14 @@ import java.net.URL;
 public class MovieDetailActivity extends AppCompatActivity
     implements TrailerAdapter.TrailerOnClickHandler{
 
-    private static final String KLASS = MainActivity.class.getSimpleName();
+    private static final String KLASS = MovieDetailActivity.class.getSimpleName();
+    private MoviePoster mPoster;
     private RecyclerView mTrailersView;
     private TrailerAdapter mTrailersAdapter;
     private RecyclerView mReviewsView;
     private ReviewAdapter mReviewsAdapter;
+    private Button mFavBtnOff;
+    private Button mFavBtnOn;
     private ProgressBar mSpinner;
 
     @Override
@@ -63,6 +71,9 @@ public class MovieDetailActivity extends AppCompatActivity
         mReviewsAdapter = new ReviewAdapter();
         mReviewsView.setAdapter(mReviewsAdapter);
 
+        mFavBtnOff = (Button) findViewById(R.id.fav_btn_off);
+        mFavBtnOn  = (Button) findViewById(R.id.fav_btn_on);
+
         Intent activityIntent = getIntent();
 
         if (activityIntent != null) {
@@ -86,6 +97,8 @@ public class MovieDetailActivity extends AppCompatActivity
     }
 
     public void renderPoster(MoviePoster poster){
+        mPoster = poster;
+
         Log.i(KLASS, "render poster " + poster.toString());
 
         TextView titleView = (TextView) findViewById(R.id.movie_title);
@@ -106,8 +119,75 @@ public class MovieDetailActivity extends AppCompatActivity
 
         TextView runtimeView = (TextView) findViewById(R.id.movie_runtime);
         runtimeView.setText(Integer.toString(poster.runtime) + " min");
+
+        if(isFavorite(mPoster.movieId)){
+            mFavBtnOff.setVisibility(View.GONE);
+            mFavBtnOn.setVisibility(View.VISIBLE);
+        }else{
+            mFavBtnOff.setVisibility(View.VISIBLE);
+            mFavBtnOn.setVisibility(View.GONE);
+        }
     }
 
+
+    public void addFavorite(View view) {
+        String favKey = getString(R.string.fav_key);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        Set empty = new TreeSet<String>();
+        Set<String> favs = prefs.getStringSet(favKey, empty);
+
+        // save
+        favs.add(mPoster.movieId);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putStringSet(favKey, favs);
+        editor.commit();
+
+        Log.d(KLASS, "added fav " + mPoster.originalTitle);
+        Log.d(KLASS, favs.toString());
+
+        toggleFavButtons();
+    }
+
+    public void removeFavorite(View view) {
+        String favKey = getString(R.string.fav_key);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        Set empty = new TreeSet<String>();
+        Set<String> favs = prefs.getStringSet(favKey, empty);
+
+        // save
+        favs.remove(mPoster.movieId);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putStringSet(favKey, favs);
+        editor.commit();
+
+        Log.d(KLASS, "removed fav " + mPoster.originalTitle);
+        Log.d(KLASS, favs.toString());
+
+        toggleFavButtons();
+    }
+
+    public void toggleFavButtons() {
+        if(mFavBtnOff.getVisibility() == View.VISIBLE){
+            mFavBtnOff.setVisibility(View.GONE);
+            mFavBtnOn.setVisibility(View.VISIBLE);
+        }else{
+            mFavBtnOff.setVisibility(View.VISIBLE);
+            mFavBtnOn.setVisibility(View.GONE);
+        }
+    }
+
+    private boolean isFavorite(String movieId) {
+        Set<String> favs = getFavorites();
+
+        return favs.contains(movieId);
+    }
+
+    private Set<String> getFavorites() {
+        String favKey = getString(R.string.fav_key);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        Set empty = new TreeSet<String>();
+        return prefs.getStringSet(favKey, empty);
+    }
 
     public class FetchDetailTask extends AsyncTask<String, Void, MoviePoster> {
         private MovieDetailActivity mContext;

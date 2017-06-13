@@ -64,7 +64,31 @@
                     android:layout_height="wrap_content"
                     android:textSize="22sp"
                     android:paddingTop="5dp"
-                    tools.text="8.0/10" />
+                    tools:text="8.0/10" />
+
+                <Button
+                    android:id="@+id/fav_btn_off"
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mark_fav"
+                    android:background="@color/colorTealLight"
+                    android:padding="5dp"
+                    android:layout_margin="10dp"
+                    android:textColor="@color/darkGray"
+                    android:drawableStart="@android:drawable/star_off"
+                    android:onClick="addFavorite"/>
+
+                <Button
+                    android:id="@+id/fav_btn_on"
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mark_fav"
+                    android:background="@color/colorTealLight"
+                    android:padding="5dp"
+                    android:layout_margin="10dp"
+                    android:textColor="@color/darkGray"
+                    android:drawableStart="@android:drawable/star_on"
+                    android:onClick="removeFavorite"/>
 
             </LinearLayout>
         </LinearLayout>
