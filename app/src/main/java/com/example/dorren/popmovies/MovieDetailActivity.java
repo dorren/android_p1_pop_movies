@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.dorren.popmovies.models.MoviesDbHelper;
 import com.example.dorren.popmovies.utilities.NetworkUtils;
 import com.example.dorren.popmovies.utilities.PreferenceUtil;
 import com.squareup.picasso.Picasso;
@@ -40,11 +41,16 @@ public class MovieDetailActivity extends AppCompatActivity
     private Button mFavBtnOff;
     private Button mFavBtnOn;
     private ProgressBar mSpinner;
+    private MoviesDbHelper mDbHelper;
+    private MoviePoster[] mFavorites;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.movie_detail);
+
+        mDbHelper = new MoviesDbHelper(this);
+        mFavorites = mDbHelper.findAll();
 
         mSpinner = (ProgressBar) findViewById(R.id.detail_loading_indicator);
 
@@ -135,13 +141,13 @@ public class MovieDetailActivity extends AppCompatActivity
 
 
     public void addFavorite(View view) {
-        PreferenceUtil.addFavorite(this, mPoster);
+        mDbHelper.addMovie(mPoster.movieId, mPoster.imagePath);
 
         toggleFavButtons();
     }
 
     public void removeFavorite(View view) {
-        PreferenceUtil.removeFavorite(this, mPoster);
+        mDbHelper.deleteMovie(mPoster.movieId);
 
         toggleFavButtons();
     }
@@ -157,7 +163,7 @@ public class MovieDetailActivity extends AppCompatActivity
     }
 
     private boolean isFavorite(MoviePoster moviePoster) {
-        return PreferenceUtil.isFavorite(this, moviePoster);
+        return mDbHelper.isSaved(moviePoster.movieId, mFavorites);
     }
 
 

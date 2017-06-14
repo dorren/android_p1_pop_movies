@@ -2,9 +2,8 @@ package com.example.dorren.popmovies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
-import android.os.PersistableBundle;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -17,8 +16,8 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.dorren.popmovies.models.MoviesDbHelper;
 import com.example.dorren.popmovies.utilities.NetworkUtils;
-import com.example.dorren.popmovies.utilities.PreferenceUtil;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private ProgressBar mSpinner;
     private String mSort;
     private final String SORT_KEY = "sort";
+    private MoviesDbHelper mDbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +49,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mRecyclerView.setHasFixedSize(true);
         mMovieAdapter = new MovieAdapter(this);
         mRecyclerView.setAdapter(mMovieAdapter);
+
+        mDbHelper = new MoviesDbHelper(this);
+        //File dbFile = getDatabasePath(MoviesDbHelper.DATABASE_NAME);
+        SQLiteDatabase db = mDbHelper.getDb();
+        Log.d(KLASS, db.getPath());
 
 
         if(mSort == null) { mSort = NetworkUtils.SORT_POPULAR; }
@@ -217,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         @Override
         protected MoviePoster[] doInBackground(String... params) {
-            mPosters = PreferenceUtil.getFavorites(mContext);
+            mPosters = mDbHelper.findAll();
 
             return mPosters;
         }
