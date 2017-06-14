@@ -3,6 +3,7 @@ package com.example.dorren.popmovies;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.PersistableBundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -30,6 +31,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private MovieAdapter mMovieAdapter;
     private TextView mErrorText;
     private ProgressBar mSpinner;
+    private String mSort;
+    private final String SORT_KEY = "sort";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,18 +50,31 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mMovieAdapter = new MovieAdapter(this);
         mRecyclerView.setAdapter(mMovieAdapter);
 
+
+        if(mSort == null) { mSort = NetworkUtils.SORT_POPULAR; }
+
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
-            String sort = intent.getStringExtra(Intent.EXTRA_TEXT);
-
-            if(sort.equals(NetworkUtils.SORT_FAVORITE)){
-                new FetchFavsTask(this).execute();
-            }else {
-                new FetchMoviesTask(this).execute(sort);
-            }
-        }else {
-            new FetchMoviesTask(this).execute(NetworkUtils.SORT_POPULAR);
+            mSort = intent.getStringExtra(Intent.EXTRA_TEXT);
         }
+
+        if(mSort.equals(NetworkUtils.SORT_POPULAR) ||
+           mSort.equals(NetworkUtils.SORT_TOP_RATED)) {
+            new FetchMoviesTask(this).execute(mSort);
+        }else {
+            new FetchFavsTask(this).execute();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString(SORT_KEY, mSort);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        mSort = savedInstanceState.getString(SORT_KEY, NetworkUtils.SORT_POPULAR);
     }
 
     @Override
