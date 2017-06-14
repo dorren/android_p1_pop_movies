@@ -29,6 +29,7 @@ public final class NetworkUtils {
 
     public static final String SORT_POPULAR   = "popular";
     public static final String SORT_TOP_RATED = "top_rated";
+    public static final String SORT_FAVORITE = "favorite";
 
     public static final String YOUTUBE_URL = "https://www.youtube.com";
 
@@ -44,13 +45,13 @@ public final class NetworkUtils {
      * https://api.themoviedb.org/3/discover/movie?certification_country=US&sort_by=vote_average.desc&api_key=abc123
      */
      public static URL buildMovieURL(String sort){
-        Uri builtUri = null;
-        if( sort == SORT_POPULAR) {
+         Uri builtUri = null;
+        if( sort.equals(SORT_POPULAR)) {
             builtUri = Uri.parse(MOVIE_DB_BASE_URL).buildUpon()
                     .appendEncodedPath(POPULAR_PATH)
                     .appendQueryParameter(API_KEY_NAME, KEY)
                     .build();
-        }else if (sort == SORT_TOP_RATED){
+        }else if (sort.equals(SORT_TOP_RATED)){
             builtUri = Uri.parse(MOVIE_DB_BASE_URL).buildUpon()
                     .appendEncodedPath(TOP_RATED_PATH)
                     .appendQueryParameter(API_KEY_NAME, KEY)

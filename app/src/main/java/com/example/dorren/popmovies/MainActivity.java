@@ -3,6 +3,7 @@ package com.example.dorren.popmovies;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -41,13 +42,23 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         GridLayoutManager layoutManager
                 = new GridLayoutManager(this, 2);
 
-
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
         mMovieAdapter = new MovieAdapter(this);
         mRecyclerView.setAdapter(mMovieAdapter);
 
-        new FetchMoviesTask(this).execute(NetworkUtils.SORT_POPULAR);
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
+            String sort = intent.getStringExtra(Intent.EXTRA_TEXT);
+
+            if(sort.equals(NetworkUtils.SORT_FAVORITE)){
+                new FetchFavsTask(this).execute();
+            }else {
+                new FetchMoviesTask(this).execute(sort);
+            }
+        }else {
+            new FetchMoviesTask(this).execute(NetworkUtils.SORT_POPULAR);
+        }
     }
 
     @Override
@@ -62,18 +73,20 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
 
+        Intent intent = new Intent(this, this.getClass());
+
         if(itemId == R.id.action_popular){
-            new FetchMoviesTask(this).execute(NetworkUtils.SORT_POPULAR);
+            intent.putExtra(Intent.EXTRA_TEXT, NetworkUtils.SORT_POPULAR);
         }
 
         if(itemId == R.id.action_top_rated){
-            new FetchMoviesTask(this).execute(NetworkUtils.SORT_TOP_RATED);
+            intent.putExtra(Intent.EXTRA_TEXT, NetworkUtils.SORT_TOP_RATED);
         }
-
 
         if(itemId == R.id.action_favorites){
-            new FetchFavsTask(this).execute();
+            intent.putExtra(Intent.EXTRA_TEXT, NetworkUtils.SORT_FAVORITE);
         }
+        startActivity(intent);
 
         return super.onOptionsItemSelected(item);
     }

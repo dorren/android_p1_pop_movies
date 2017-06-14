@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -83,6 +84,17 @@ public class MovieDetailActivity extends AppCompatActivity
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public void onClick(MovieTrailer trailer) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         Uri uri = Uri.parse(trailer.videoURL().toString());
@@ -111,13 +123,6 @@ public class MovieDetailActivity extends AppCompatActivity
 
         TextView runtimeView = (TextView) findViewById(R.id.movie_runtime);
         runtimeView.setText(Integer.toString(poster.runtime) + " min");
-
-//        String favKey = getString(R.string.fav_key);
-//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-//        SharedPreferences.Editor editor = prefs.edit();
-//        Set empty = new TreeSet<String>();
-//        editor.putStringSet(favKey, empty);
-//        editor.commit();
 
         if(isFavorite(mPoster)){
             mFavBtnOff.setVisibility(View.GONE);
