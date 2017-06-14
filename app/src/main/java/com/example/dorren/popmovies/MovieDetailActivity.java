@@ -1,13 +1,9 @@
 package com.example.dorren.popmovies;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,14 +15,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.dorren.popmovies.utilities.NetworkUtils;
+import com.example.dorren.popmovies.utilities.PreferenceUtil;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.URL;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Created by dorrenchen on 5/12/17.
@@ -91,15 +86,12 @@ public class MovieDetailActivity extends AppCompatActivity
     public void onClick(MovieTrailer trailer) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         Uri uri = Uri.parse(trailer.videoURL().toString());
-        Log.d("trailer click ", trailer.videoURL().toString());
         intent.setData(uri);
         startActivity(intent);
     }
 
     public void renderPoster(MoviePoster poster){
         mPoster = poster;
-
-        Log.i(KLASS, "render poster " + poster.toString());
 
         TextView titleView = (TextView) findViewById(R.id.movie_title);
         titleView.setText(poster.originalTitle);
@@ -120,7 +112,14 @@ public class MovieDetailActivity extends AppCompatActivity
         TextView runtimeView = (TextView) findViewById(R.id.movie_runtime);
         runtimeView.setText(Integer.toString(poster.runtime) + " min");
 
-        if(isFavorite(mPoster.movieId)){
+//        String favKey = getString(R.string.fav_key);
+//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+//        SharedPreferences.Editor editor = prefs.edit();
+//        Set empty = new TreeSet<String>();
+//        editor.putStringSet(favKey, empty);
+//        editor.commit();
+
+        if(isFavorite(mPoster)){
             mFavBtnOff.setVisibility(View.GONE);
             mFavBtnOn.setVisibility(View.VISIBLE);
         }else{
@@ -131,37 +130,13 @@ public class MovieDetailActivity extends AppCompatActivity
 
 
     public void addFavorite(View view) {
-        String favKey = getString(R.string.fav_key);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Set empty = new TreeSet<String>();
-        Set<String> favs = prefs.getStringSet(favKey, empty);
-
-        // save
-        favs.add(mPoster.movieId);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putStringSet(favKey, favs);
-        editor.commit();
-
-        Log.d(KLASS, "added fav " + mPoster.originalTitle);
-        Log.d(KLASS, favs.toString());
+        PreferenceUtil.addFavorite(this, mPoster);
 
         toggleFavButtons();
     }
 
     public void removeFavorite(View view) {
-        String favKey = getString(R.string.fav_key);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Set empty = new TreeSet<String>();
-        Set<String> favs = prefs.getStringSet(favKey, empty);
-
-        // save
-        favs.remove(mPoster.movieId);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putStringSet(favKey, favs);
-        editor.commit();
-
-        Log.d(KLASS, "removed fav " + mPoster.originalTitle);
-        Log.d(KLASS, favs.toString());
+        PreferenceUtil.removeFavorite(this, mPoster);
 
         toggleFavButtons();
     }
@@ -176,18 +151,10 @@ public class MovieDetailActivity extends AppCompatActivity
         }
     }
 
-    private boolean isFavorite(String movieId) {
-        Set<String> favs = getFavorites();
-
-        return favs.contains(movieId);
+    private boolean isFavorite(MoviePoster moviePoster) {
+        return PreferenceUtil.isFavorite(this, moviePoster);
     }
 
-    private Set<String> getFavorites() {
-        String favKey = getString(R.string.fav_key);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Set empty = new TreeSet<String>();
-        return prefs.getStringSet(favKey, empty);
-    }
 
     public class FetchDetailTask extends AsyncTask<String, Void, MoviePoster> {
         private MovieDetailActivity mContext;
@@ -209,6 +176,7 @@ public class MovieDetailActivity extends AppCompatActivity
             URL detailPath = NetworkUtils.buildDetailURL(movieId);
 
             try {
+                Log.d(KLASS, detailPath.toString());
                 String response = NetworkUtils.getResponseFromHttpUrl(detailPath);
                 JSONObject movie = new JSONObject(response);
                 mPoster = new MoviePoster();
@@ -264,6 +232,7 @@ public class MovieDetailActivity extends AppCompatActivity
             URL trailersPath = NetworkUtils.buildTrailersURL(movieId);
 
             try {
+                Log.d(KLASS, trailersPath.toString());
                 String response = NetworkUtils.getResponseFromHttpUrl(trailersPath);
                 JSONObject json = new JSONObject(response);
                 JSONArray jsonTrailers = json.getJSONArray("results");
@@ -277,8 +246,6 @@ public class MovieDetailActivity extends AppCompatActivity
                     mTrailers[i].site = trailer.getString("site");
                     mTrailers[i].type = trailer.getString("type");
                     mTrailers[i].size = trailer.getInt("size");
-
-                    Log.d("detail ", mTrailers[i].toString());
                 }
                 return mTrailers;
 
@@ -320,6 +287,7 @@ public class MovieDetailActivity extends AppCompatActivity
             URL reviewsPath = NetworkUtils.buildReviewsURL(movieId);
 
             try {
+                Log.d(KLASS, reviewsPath.toString());
                 String response = NetworkUtils.getResponseFromHttpUrl(reviewsPath);
                 JSONObject json = new JSONObject(response);
                 JSONArray jsonArray = json.getJSONArray("results");
@@ -330,8 +298,6 @@ public class MovieDetailActivity extends AppCompatActivity
                     mReviews[i] = new MovieReview();
                     mReviews[i].author  = item.getString("author");
                     mReviews[i].content = item.getString("content");
-
-                    Log.d("detail ", mReviews[i].toString());
                 }
                 return mReviews;
 

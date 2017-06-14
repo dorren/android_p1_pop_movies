@@ -6,7 +6,6 @@ import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
@@ -17,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.dorren.popmovies.utilities.NetworkUtils;
+import com.example.dorren.popmovies.utilities.PreferenceUtil;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -38,8 +38,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mSpinner = (ProgressBar) findViewById(R.id.main_loading_indicator);
         mRecyclerView = (RecyclerView) findViewById(R.id.movie_posters);
 
-        //LinearLayoutManager layoutManager
-        //        = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         GridLayoutManager layoutManager
                 = new GridLayoutManager(this, 2);
 
@@ -70,6 +68,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         if(itemId == R.id.action_top_rated){
             new FetchMoviesTask(this).execute(NetworkUtils.SORT_TOP_RATED);
+        }
+
+
+        if(itemId == R.id.action_favorites){
+            new FetchFavsTask(this).execute();
         }
 
         return super.onOptionsItemSelected(item);
@@ -159,6 +162,35 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 mErrorMsg = e.getMessage();
                 return null;
             }
+        }
+
+        @Override
+        protected void onPostExecute(MoviePoster[] posters) {
+            mSpinner.setVisibility(View.INVISIBLE);
+
+            if(mErrorMsg != null && !mErrorMsg.isEmpty()) {
+                mContext.renderError(mErrorMsg);
+            } else {
+                mMovieAdapter.setPosterData(posters);
+            }
+        }
+    }
+
+    public class FetchFavsTask extends AsyncTask<String, Void, MoviePoster[]> {
+        private MoviePoster[] mPosters;
+        private MainActivity mContext;
+        private String mErrorMsg;
+
+        public FetchFavsTask(MainActivity context) {
+            super();
+            mContext = context;
+        }
+
+        @Override
+        protected MoviePoster[] doInBackground(String... params) {
+            mPosters = PreferenceUtil.getFavorites(mContext);
+
+            return mPosters;
         }
 
         @Override
