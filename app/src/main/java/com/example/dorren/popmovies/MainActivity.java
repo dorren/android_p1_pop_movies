@@ -56,6 +56,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         Log.d(KLASS, db.getPath());
 
 
+
+    }
+
+    @Override
+    protected void onResume() {
         if(mSort == null) { mSort = NetworkUtils.SORT_POPULAR; }
 
         Intent intent = getIntent();
@@ -64,12 +69,15 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         }
 
         if(mSort.equals(NetworkUtils.SORT_POPULAR) ||
-           mSort.equals(NetworkUtils.SORT_TOP_RATED)) {
+                mSort.equals(NetworkUtils.SORT_TOP_RATED)) {
             new FetchMoviesTask(this).execute(mSort);
         }else {
             new FetchFavsTask(this).execute();
         }
+
+        super.onResume();
     }
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {

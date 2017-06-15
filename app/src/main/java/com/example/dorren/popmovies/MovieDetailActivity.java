@@ -1,5 +1,6 @@
 package com.example.dorren.popmovies;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -15,6 +16,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.dorren.popmovies.models.FavoritesProvider;
+import com.example.dorren.popmovies.models.Movie;
 import com.example.dorren.popmovies.models.MoviesDbHelper;
 import com.example.dorren.popmovies.utilities.NetworkUtils;
 import com.example.dorren.popmovies.utilities.PreferenceUtil;
@@ -141,13 +144,20 @@ public class MovieDetailActivity extends AppCompatActivity
 
 
     public void addFavorite(View view) {
-        mDbHelper.addMovie(mPoster.movieId, mPoster.imagePath);
+        ContentValues cv = new ContentValues();
+        cv.put(Movie.COLUMN_MOVIE_ID, mPoster.movieId);
+        cv.put(Movie.COLUMN_IMAGE_PATH, mPoster.imagePath);
+        Uri uri = getContentResolver().insert(FavoritesProvider.CONTENT_URI, cv);
 
         toggleFavButtons();
     }
 
     public void removeFavorite(View view) {
-        mDbHelper.deleteMovie(mPoster.movieId);
+        String[] movieId = new String[]{mPoster.movieId};
+
+        getContentResolver().delete(
+                FavoritesProvider.CONTENT_URI,
+                Movie.COLUMN_MOVIE_ID + "=?", movieId);
 
         toggleFavButtons();
     }
