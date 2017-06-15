@@ -61,21 +61,25 @@ public class MainActivity extends AppCompatActivity implements
 
         mDbHelper = new MoviesDbHelper(this);
         getSupportLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
+    }
 
-        if(mSort == null) { mSort = NetworkUtils.SORT_POPULAR; }
+    public String getSort(){
+        if(mSort == null) {
+            mSort = NetworkUtils.SORT_POPULAR;
+        }
 
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
             mSort = intent.getStringExtra(Intent.EXTRA_TEXT);
         }
-    }
 
-    public String getSort(){ return mSort; }
+        return mSort;
+    }
 
     @Override
     protected void onResume() {
         Log.d(KLASS, "onResume");
-
+        showSpinner();
         super.onResume();
     }
 
@@ -139,92 +143,38 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public Loader<MoviePoster[]> onCreateLoader(int id, Bundle args) {
-        final MainActivity context = this;
+        Log.d(KLASS, "onCreateLoader");
         NetworkUtils.KEY = getString(R.string.themoviedb_api_key);
 
-        Log.d(KLASS, "onCreateLoader");
-
-        return new AsyncTaskLoader<MoviePoster[]>(this) {
-            private MoviePoster[] mPosters;
-            private String mErrorMsg;
-            private String mSort;
-
-            @Override
-            protected void onStartLoading() {
-                forceLoad();
-            }
-
-            @Override
-            public MoviePoster[] loadInBackground() {
-                Log.d(KLASS, "loadInBackground");
-                mSort = context.getSort();
-                Log.d(KLASS, "loaderInbkgd sort " + mSort);
-
-                if(mSort.equals(NetworkUtils.SORT_POPULAR) ||
-                   mSort.equals(NetworkUtils.SORT_TOP_RATED)) {
-                    mPosters = fromApi();
-                }else {
-                    mPosters = fromFavorites();
-                }
-
-                return mPosters;
-            }
-
-            private MoviePoster[] fromApi(){
-                URL url = NetworkUtils.buildMovieURL(mSort);
-                Log.i(KLASS, url.toString());
-
-                try {
-                    String response = NetworkUtils.getResponseFromHttpUrl(url);
-                    JSONObject json = new JSONObject(response);
-
-                    if(json.has("status_message")) {
-                        mErrorMsg = json.getString("status_message");
-                    }else {
-                        JSONArray movies = json.getJSONArray("results");
-                        mPosters = new MoviePoster[movies.length()];
-
-                        for (int i = 0; i < movies.length(); i++) {
-                            MoviePoster poster = new MoviePoster();
-
-                            JSONObject movie = movies.getJSONObject(i);
-                            poster.movieId = movie.getString("id");
-                            poster.originalTitle = movie.getString("original_title");
-
-                            String imagePath = movie.getString("poster_path");
-                            URL fullPath = NetworkUtils.buildImageURL(imagePath);
-                            poster.imagePath = fullPath.toString();
-
-                            URL detailPath = NetworkUtils.buildDetailURL(poster.movieId);
-                            poster.detailPath = detailPath.toString();
-
-                            mPosters[i] = poster;
-                        }
-
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    mErrorMsg = e.getMessage();
-                    return null;
-                }
-                return mPosters;
-            }
-
-            private MoviePoster[] fromFavorites() {
-                return Movie.allFavorites(context);
-            }
-        };
+        return new MoviesLoader(this, getSort());
     }
 
     @Override
     public void onLoadFinished(Loader<MoviePoster[]> loader, MoviePoster[] data) {
         Log.d(KLASS, "load finished ");
-        mMovieAdapter.setPosterData(data);
+        hideSpinner();
+
+        MoviesLoader mloader = (MoviesLoader) loader;
+        String errMsg = mloader.getErrorMsg();
+        if(errMsg == null) {
+            mMovieAdapter.setPosterData(data);
+        }else{
+            renderError(errMsg);
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<MoviePoster[]> loader) {
         Log.d(KLASS, "onLoaderReset");
         loader.forceLoad();
+    }
+
+
+    public void showSpinner(){
+        mSpinner.setVisibility(View.VISIBLE);
+    }
+
+    public void hideSpinner(){
+        mSpinner.setVisibility(View.INVISIBLE);
     }
 }
