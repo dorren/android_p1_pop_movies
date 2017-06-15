@@ -13,6 +13,9 @@ import com.squareup.picasso.Picasso;
 
 /**
  * Created by dorrenchen on 4/29/17.
+ *
+ * RecyclerView adapter used in MainActivity to show all movie posters. data could come from
+ * moviedb api or favorites content provider.
  */
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapterViewHolder> {

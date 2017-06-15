@@ -2,8 +2,11 @@ package com.example.dorren.popmovies;
 
 import android.content.Context;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
+import android.database.Cursor;
 import android.os.AsyncTask;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -16,6 +19,8 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.dorren.popmovies.models.FavoritesProvider;
+import com.example.dorren.popmovies.models.Movie;
 import com.example.dorren.popmovies.models.MoviesDbHelper;
 import com.example.dorren.popmovies.utilities.NetworkUtils;
 
@@ -24,7 +29,9 @@ import org.json.JSONObject;
 
 import java.net.URL;
 
-public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
+public class MainActivity extends AppCompatActivity implements
+        MovieAdapter.MovieAdapterOnClickHandler,
+        LoaderManager.LoaderCallbacks<MoviePoster[]> {
     private static final String KLASS = MainActivity.class.getSimpleName();
     private RecyclerView mRecyclerView;
     private MovieAdapter mMovieAdapter;
@@ -33,11 +40,13 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private String mSort;
     private final String SORT_KEY = "sort";
     private MoviesDbHelper mDbHelper;
+    private static final int CURSOR_LOADER_ID = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         mSpinner = (ProgressBar) findViewById(R.id.main_loading_indicator);
         mRecyclerView = (RecyclerView) findViewById(R.id.movie_posters);
@@ -51,9 +60,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mRecyclerView.setAdapter(mMovieAdapter);
 
         mDbHelper = new MoviesDbHelper(this);
-        //File dbFile = getDatabasePath(MoviesDbHelper.DATABASE_NAME);
-        SQLiteDatabase db = mDbHelper.getDb();
-        Log.d(KLASS, db.getPath());
+        getSupportLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
         if(mSort == null) { mSort = NetworkUtils.SORT_POPULAR; }
 
@@ -61,21 +68,13 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
             mSort = intent.getStringExtra(Intent.EXTRA_TEXT);
         }
-
-        if(mSort.equals(NetworkUtils.SORT_POPULAR) ||
-                mSort.equals(NetworkUtils.SORT_TOP_RATED)) {
-            new FetchMoviesTask(this).execute(mSort);
-        }else {
-            new FetchFavsTask(this).execute();
-        }
-
     }
+
+    public String getSort(){ return mSort; }
 
     @Override
     protected void onResume() {
-        if(mSort.equals(NetworkUtils.SORT_FAVORITE)) {
-            new FetchFavsTask(this).execute();
-        }
+        Log.d(KLASS, "onResume");
 
         super.onResume();
     }
@@ -138,114 +137,95 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mErrorText.setText(mErrorText.getText() + "\n\n" + msg);
     }
 
-    public class FetchMoviesTask extends AsyncTask<String, Void, MoviePoster[]> {
-        private MoviePoster[] mPosters;
-        private MainActivity mContext;
-        private String mErrorMsg;
+    @Override
+    public Loader<MoviePoster[]> onCreateLoader(int id, Bundle args) {
+        final MainActivity context = this;
+        NetworkUtils.KEY = getString(R.string.themoviedb_api_key);
 
-        public FetchMoviesTask(MainActivity context){
-            super();
-            mContext = context;
-        }
+        Log.d(KLASS, "onCreateLoader");
 
+        return new AsyncTaskLoader<MoviePoster[]>(this) {
+            private MoviePoster[] mPosters;
+            private String mErrorMsg;
+            private String mSort;
 
-        /**
-         * get api key from xml
-         */
-        public void setApiKey(){
-            NetworkUtils.KEY = getString(R.string.themoviedb_api_key);
-        }
+            @Override
+            protected void onStartLoading() {
+                forceLoad();
+            }
 
-        @Override
-        protected void onPreExecute() {
-            mSpinner.setVisibility(View.VISIBLE);
-            setApiKey();
-        }
+            @Override
+            public MoviePoster[] loadInBackground() {
+                Log.d(KLASS, "loadInBackground");
+                mSort = context.getSort();
+                Log.d(KLASS, "loaderInbkgd sort " + mSort);
 
-        @Override
-        protected MoviePoster[] doInBackground(String... params) {
-
-            URL url = NetworkUtils.buildMovieURL(params[0]);
-            Log.i(KLASS, url.toString());
-
-            try {
-                String response = NetworkUtils.getResponseFromHttpUrl(url);
-                JSONObject json = new JSONObject(response);
-
-                if(json.has("status_message")) {
-                    mErrorMsg = json.getString("status_message");
+                if(mSort.equals(NetworkUtils.SORT_POPULAR) ||
+                   mSort.equals(NetworkUtils.SORT_TOP_RATED)) {
+                    mPosters = fromApi();
+                }else {
+                    mPosters = fromFavorites();
                 }
 
-                if(mErrorMsg == null) {
-                    JSONArray movies = json.getJSONArray("results");
-                    mPosters = new MoviePoster[movies.length()];
+                return mPosters;
+            }
 
-                    for (int i = 0; i < movies.length(); i++) {
-                        MoviePoster poster = new MoviePoster();
+            private MoviePoster[] fromApi(){
+                URL url = NetworkUtils.buildMovieURL(mSort);
+                Log.i(KLASS, url.toString());
 
-                        JSONObject movie = movies.getJSONObject(i);
-                        poster.movieId = movie.getString("id");
-                        poster.originalTitle = movie.getString("original_title");
+                try {
+                    String response = NetworkUtils.getResponseFromHttpUrl(url);
+                    JSONObject json = new JSONObject(response);
 
-                        String imagePath = movie.getString("poster_path");
-                        URL fullPath = NetworkUtils.buildImageURL(imagePath);
-                        poster.imagePath = fullPath.toString();
+                    Log.d(KLASS, response);
+                    if(json.has("status_message")) {
+                        mErrorMsg = json.getString("status_message");
+                    }else {
+                        JSONArray movies = json.getJSONArray("results");
+                        mPosters = new MoviePoster[movies.length()];
 
-                        URL detailPath = NetworkUtils.buildDetailURL(poster.movieId);
-                        poster.detailPath = detailPath.toString();
+                        for (int i = 0; i < movies.length(); i++) {
+                            MoviePoster poster = new MoviePoster();
 
-                        mPosters[i] = poster;
+                            JSONObject movie = movies.getJSONObject(i);
+                            poster.movieId = movie.getString("id");
+                            poster.originalTitle = movie.getString("original_title");
+
+                            String imagePath = movie.getString("poster_path");
+                            URL fullPath = NetworkUtils.buildImageURL(imagePath);
+                            poster.imagePath = fullPath.toString();
+
+                            URL detailPath = NetworkUtils.buildDetailURL(poster.movieId);
+                            poster.detailPath = detailPath.toString();
+
+                            mPosters[i] = poster;
+                        }
+
                     }
-
-                    return mPosters;
-                }else {
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    mErrorMsg = e.getMessage();
                     return null;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                mErrorMsg = e.getMessage();
-                return null;
+                return mPosters;
             }
-        }
 
-        @Override
-        protected void onPostExecute(MoviePoster[] posters) {
-            mSpinner.setVisibility(View.INVISIBLE);
-
-            if(mErrorMsg != null && !mErrorMsg.isEmpty()) {
-                mContext.renderError(mErrorMsg);
-            } else {
-                mMovieAdapter.setPosterData(posters);
+            private MoviePoster[] fromFavorites() {
+                return Movie.allFavorites(context);
             }
-        }
+        };
     }
 
-    public class FetchFavsTask extends AsyncTask<String, Void, MoviePoster[]> {
-        private MoviePoster[] mPosters;
-        private MainActivity mContext;
-        private String mErrorMsg;
+    @Override
+    public void onLoadFinished(Loader<MoviePoster[]> loader, MoviePoster[] data) {
+        Log.d(KLASS, "load finished ");
+        mMovieAdapter.setPosterData(data);
+    }
 
-        public FetchFavsTask(MainActivity context) {
-            super();
-            mContext = context;
-        }
-
-        @Override
-        protected MoviePoster[] doInBackground(String... params) {
-            mPosters = mDbHelper.findAll();
-
-            return mPosters;
-        }
-
-        @Override
-        protected void onPostExecute(MoviePoster[] posters) {
-            mSpinner.setVisibility(View.INVISIBLE);
-
-            if(mErrorMsg != null && !mErrorMsg.isEmpty()) {
-                mContext.renderError(mErrorMsg);
-            } else {
-                mMovieAdapter.setPosterData(posters);
-            }
-        }
+    @Override
+    public void onLoaderReset(Loader<MoviePoster[]> loader) {
+        Log.d(KLASS, "onLoaderReset");
+        loader.forceLoad();
     }
 }
