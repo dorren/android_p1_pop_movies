@@ -61,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements
 
         mDbHelper = new MoviesDbHelper(this);
         getSupportLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
+
+        showSpinner();
     }
 
     public String getSort(){
@@ -79,7 +81,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         Log.d(KLASS, "onResume");
-        showSpinner();
         super.onResume();
     }
 
