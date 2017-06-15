@@ -178,7 +178,6 @@ public class MainActivity extends AppCompatActivity implements
                     String response = NetworkUtils.getResponseFromHttpUrl(url);
                     JSONObject json = new JSONObject(response);
 
-                    Log.d(KLASS, response);
                     if(json.has("status_message")) {
                         mErrorMsg = json.getString("status_message");
                     }else {
