@@ -55,12 +55,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         SQLiteDatabase db = mDbHelper.getDb();
         Log.d(KLASS, db.getPath());
 
-
-
-    }
-
-    @Override
-    protected void onResume() {
         if(mSort == null) { mSort = NetworkUtils.SORT_POPULAR; }
 
         Intent intent = getIntent();
@@ -72,6 +66,14 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 mSort.equals(NetworkUtils.SORT_TOP_RATED)) {
             new FetchMoviesTask(this).execute(mSort);
         }else {
+            new FetchFavsTask(this).execute();
+        }
+
+    }
+
+    @Override
+    protected void onResume() {
+        if(mSort.equals(NetworkUtils.SORT_FAVORITE)) {
             new FetchFavsTask(this).execute();
         }
 

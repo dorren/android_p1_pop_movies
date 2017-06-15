@@ -253,7 +253,7 @@ public class MovieDetailActivity extends AppCompatActivity
             URL trailersPath = NetworkUtils.buildTrailersURL(movieId);
 
             try {
-                Log.d(KLASS, trailersPath.toString());
+                //Log.d(KLASS, trailersPath.toString());
                 String response = NetworkUtils.getResponseFromHttpUrl(trailersPath);
                 JSONObject json = new JSONObject(response);
                 JSONArray jsonTrailers = json.getJSONArray("results");
@@ -308,7 +308,7 @@ public class MovieDetailActivity extends AppCompatActivity
             URL reviewsPath = NetworkUtils.buildReviewsURL(movieId);
 
             try {
-                Log.d(KLASS, reviewsPath.toString());
+                //Log.d(KLASS, reviewsPath.toString());
                 String response = NetworkUtils.getResponseFromHttpUrl(reviewsPath);
                 JSONObject json = new JSONObject(response);
                 JSONArray jsonArray = json.getJSONArray("results");
